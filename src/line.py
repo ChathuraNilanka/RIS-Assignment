@@ -1,43 +1,52 @@
 #!/usr/bin/env python
 
-import rospy
+import rospy 
+import math
 from sensor_msgs.msg import LaserScan 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from tf.transformations import quaternion_from_euler
+from nav_msgs.msg import Odometry
 
 
 def callback(msg):
-	while not rospy.is_shutdown():
-		print "Distance between robot and wall :" 
-		print msg.ranges[270]
-	
-		move.linear.x = 0.1
-		if msg.ranges[0] < 0.2:
-			move.linear.x = 0
-			print "Finished..!"
+	if not(math.isinf(msg.ranges[260])):
+		print "Distance between robot and wall :", msg.ranges[270]
+		
 
-		pub.publish(move)
+	if msg.ranges[270] <= 1:
+		move.angular.z = 0.01
+		move.linear.x = 0.1
+
+	if msg.ranges[270] >= 1:
+		move.angular.z = -0.01
+		move.linear.x = 0.1
+
+	if msg.ranges[270] < 1 and msg.ranges[270] > 1:
+		move.angular.z = 0
+		move.linear.x = 0.1
+
+	if msg.ranges[0] <= 0.3:
+		move.angular.z = 0
+		move.linear.x = 0
+
+	if math.isinf(msg.ranges[260]):
+		move.angular.z = 0
+		move.linear.x = 0
+
+	pub.publish(move)
+			
+def calcDistance(val):
+	distance = val.pose.pose.position.x
+	print "Distance :", distance
+	return distance
 
 rospy.init_node('assignment')
 
-pub = rospy.Publisher('/initialpose', PoseWithCovarianceStamped, queue_size = 10)
 rospy.sleep(3)
-start_pose = PoseWithCovarianceStamped()
- 
-start_pose.pose.pose.position.x = 0.0
-start_pose.pose.pose.position.y = 1
-start_pose.pose.pose.position.z = 0.0
- 
-[x,y,z,w]=quaternion_from_euler(0.0,0.0,0.0)
-start_pose.pose.pose.orientation.x = x
-start_pose.pose.pose.orientation.y = y
-start_pose.pose.pose.orientation.z = z
-start_pose.pose.pose.orientation.w = w
 
-pub.publish(start_pose)
 sub = rospy.Subscriber('/scan', LaserScan, callback)
-pub = rospy.Publisher('/cmd_vel', Twist)
+pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 10)
 move = Twist()
-
+odm = rospy.Subscriber('/odom', Odometry, calcDistance)
 rospy.spin()
