@@ -34,15 +34,15 @@ def callback(msg):
 		if not(math.isinf(msg.ranges[260])):
 			print "Distance between robot and wall :", msg.ranges[270]
 		
-		if msg.ranges[270] < 1 and msg.ranges[90] > 2.5:
+		if msg.ranges[270] < 2 and msg.ranges[90] > 2.5:
 			move.angular.z = 0.5
 			move.linear.x = 0.5
 
-		if msg.ranges[270] > 1 and msg.ranges[90] < 2.5:
+		if msg.ranges[270] > 2 and msg.ranges[90] < 2.5:
 			move.angular.z = -0.5
 			move.linear.x = 0.5
 
-		if msg.ranges[270] > 1 and msg.ranges[90] > 2.5:
+		if msg.ranges[270] > 1.75 and msg.ranges[90] > 1.75:
 			target_rad = target * math.pi / 180
 			move.angular.z = kp * (target_rad - yaw)
 			move.linear.x = 0.5
